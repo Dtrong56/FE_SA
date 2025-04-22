@@ -45,7 +45,21 @@ export const informationApi = {
   updateInformation: (idInfo, data) => axiosInstance.put(`/information/${idInfo}`, data),
   
   // DELETE
-  deleteInformation: (idInfo) => axiosInstance.delete(`/information/${idInfo}`),
+  deleteInformation: (idInfo) => 
+    axiosInstance.delete(`/information/${idInfo}`)
+      .then(response => {
+        const { status, message, data } = response.data;
+        console.log('[DEBUG] Delete Response:', { status, message, data });
+        
+        if (status !== 'SUCCESS') {
+          throw new Error(message || 'Failed to delete information');
+        }
+        return { message, data }; // Return both message and data
+      })
+      .catch(error => {
+        console.error('[API ERROR] Delete failed:', error);
+        throw error;
+      }),
   
   // OTHER
   getAccountsByInformationId: (idInfo) => axiosInstance.get(`/information/${idInfo}/account`)

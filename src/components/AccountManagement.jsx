@@ -12,11 +12,11 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem,
-  FormHelperText
+  MenuItem
 } from '@mui/material';
 import { informationApi } from '../api/informationApi';
 import { Search as SearchIcon, Edit, Delete } from '@mui/icons-material';
+import { Snackbar, Alert } from '@mui/material';
 
 const AccountManagement = () => {
   const [informations, setInformations] = useState([]);
@@ -26,6 +26,13 @@ const AccountManagement = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [currentRecord, setCurrentRecord] = useState(null);
   const [errors, setErrors] = useState({});
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   // Add form state
   const [formData, setFormData] = useState({
@@ -133,8 +140,36 @@ const AccountManagement = () => {
   };
 
   const handleDelete = (row) => {
-    // Implement delete logic
-    console.log('Delete:', row);
+    setRecordToDelete(row);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      const result = await informationApi.deleteInformation(recordToDelete.idInfo);
+      setSnackbar({
+        open: true,
+        message: result.message,
+        severity: 'success'
+      });
+      
+      // Refresh data
+      const data = await informationApi.getAllInformation();
+      setInformations(data);
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message,
+        severity: 'error'
+      });
+    } finally {
+      setDeleteConfirmOpen(false);
+      setRecordToDelete(null);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({...snackbar, open: false});
   };
 
   const validateForm = () => {
@@ -392,8 +427,36 @@ const AccountManagement = () => {
           <Button onClick={handleSubmit} color="primary">Lưu</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <DialogTitle>Cân nhắc xóa</DialogTitle>
+        <DialogContent>
+          Bạn có chắc muốn xóa người này không?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>Hủy</Button>
+          <Button onClick={handleConfirmDelete} color="error">OK</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Result Notification Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
-  );
+  ); // Remove the extra closing parenthesis after this line
 };
 
+// At the very end of the file, add this export:
 export default AccountManagement;
