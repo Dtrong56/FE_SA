@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Typography, CssBaseline, AppBar, Toolbar, IconButton } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import LogoutIcon from '@mui/icons-material/Logout'; // Thêm dòng này
+import { useNavigate } from 'react-router-dom'; // Thêm dòng này
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SecurityIcon from '@mui/icons-material/Security';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
@@ -45,6 +47,7 @@ const menuItems = [
 export default function Dashboard() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const navigate = useNavigate(); // Thêm dòng này
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -52,6 +55,11 @@ export default function Dashboard() {
 
   const handleListItemClick = (index) => {
     setSelectedIndex(index);
+  };
+
+  // Thêm hàm xử lý logout
+  const handleLogout = () => {
+    navigate('/login');
   };
 
   const drawer = (
@@ -99,9 +107,13 @@ export default function Dashboard() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             {menuItems[selectedIndex].text}
           </Typography>
+          {/* Thêm nút logout ở bên phải AppBar */}
+          <IconButton color="inherit" onClick={handleLogout} title="Đăng xuất">
+            <LogoutIcon />
+          </IconButton>
         </Toolbar>
       </AppBar>
       <Box
