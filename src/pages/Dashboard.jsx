@@ -31,8 +31,8 @@ import BlogManagement from '../components/BlogManagement';
 const drawerWidth = 280;
 
 const menuItems = [
-  { text: 'Quản lý thông tin và tài khoản', icon: <AccountCircleIcon />, component: <AccountManagement /> },
-  { text: 'Quản lý phân quyền tài khoản', icon: <SecurityIcon />, component: <RoleManagement /> },
+  { text: 'Quản lý thông tin nhân viên', icon: <AccountCircleIcon />, component: <AccountManagement /> },
+  { text: 'Quản lý tài khoản', icon: <SecurityIcon />, component: <RoleManagement /> },
   { text: 'Quản lý trạm dừng', icon: <DirectionsBusIcon />, component: <StationManagement /> },
   { text: 'Quản lý tuyến xe và phân công', icon: <RouteIcon />, component: <RouteManagement /> },
   { text: 'Quản lý media', icon: <ImageIcon />, component: <MediaManagement /> },

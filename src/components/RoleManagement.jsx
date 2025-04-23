@@ -51,7 +51,16 @@ export default function RoleManagement() {
   const columns = [
     { field: 'idAccount', headerName: 'ID', width: 70 },
     { field: 'accountName', headerName: 'Tên tài khoản', width: 200 },
-    { field: 'password', headerName: 'Mật khẩu', width: 200 },
+    { 
+      field: 'password', 
+      headerName: 'Mật khẩu', 
+      width: 200,
+      renderCell: (params) => (
+        <span>••••••••</span>
+      ),
+      // Giữ nguyên giá trị thật để khi edit vẫn lấy được
+      valueGetter: (params) => params.row.password
+    },
     { 
       field: 'isLocked', 
       headerName: 'Trạng thái', 
@@ -175,6 +184,30 @@ export default function RoleManagement() {
     }
   }, [idInfo]);
 
+  const [filteredAccounts, setFilteredAccounts] = useState([]);
+
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredAccounts(accounts);
+    } else {
+      const filtered = accounts.filter(account => 
+        account.accountName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredAccounts(filtered);
+    }
+  }, [searchTerm, accounts]);
+
+  const handleSearch = () => {
+    if (searchTerm.trim() === '') {
+      setFilteredAccounts(accounts);
+    } else {
+      const filtered = accounts.filter(account => 
+        account.accountName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredAccounts(filtered);
+    }
+  };
+
   // Modify saveAccount function
   const saveAccount = async () => {
     try {
@@ -248,7 +281,7 @@ export default function RoleManagement() {
   return (
     <Paper elevation={3} sx={{ 
       p: 3,
-      height: 'calc(100vh - 80px)', // Set height to fill viewport minus header
+      height: 'calc(100vh - 80px)',
       display: 'flex',
       flexDirection: 'column'
     }}>
@@ -262,30 +295,28 @@ export default function RoleManagement() {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={() => {}}>
+                <IconButton onClick={handleSearch}>
                   <SearchIcon />
                 </IconButton>
               </InputAdornment>
             ),
           }}
         />
-        {/* Removed the Thêm button */}
       </div>
-
+  
       <div style={{ flex: 1, width: '100%' }}>
         <DataGrid
-          rows={accounts}
+          rows={filteredAccounts.length > 0 || searchTerm ? filteredAccounts : accounts}
           columns={columns}
           loading={loading}
           pageSize={5}
           rowsPerPageOptions={[5, 10, 20]}
-          getRowId={(row) => row.idAccount} // Make sure this matches
+          getRowId={(row) => row.idAccount}
           components={{
             Toolbar: GridToolbar,
           }}
         />
       </div>
-
       {/* Form Dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
