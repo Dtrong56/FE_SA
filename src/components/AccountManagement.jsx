@@ -259,48 +259,72 @@ const AccountManagement = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const [editConfirmOpen, setEditConfirmOpen] = useState(false);
+
   const handleSubmit = async () => {
     if (validateForm()) {
-      try {
-        // Format date from yyyy-MM-dd to dd-MM-yyyy
-        const formatDate = (dateString) => {
-          if (!dateString) return '';
-          const parts = dateString.split('-');
-          if (parts.length === 3) {
-            return `${parts[2]}-${parts[1]}-${parts[0]}`;
-          }
-          return dateString;
-        };
-
-        const fullName = `${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`;
-        const dataToSubmit = {
-          cic: formData.cic,
-          fullName: fullName.trim(),
-          dateOfBirth: formatDate(formData.dateOfBirth),
-          sex: formData.sex,
-          permanentAddress: formData.permanentAddress,
-          phoneNumber: formData.phoneNumber,
-          email: formData.email,
-          firstName: formData.firstName,  // Include individual name fields
-          middleName: formData.middleName,
-          lastName: formData.lastName
-        };
-
-        console.log('Data being submitted:', dataToSubmit); // Debug log
-
-        if (currentRecord) {
-          await informationApi.updateInformation(currentRecord.idInfo, dataToSubmit);
-        } else {
-          await informationApi.createInformation(dataToSubmit);
-        }
-
-        // Refresh data
-        const data = await informationApi.getAllInformation();
-        setInformations(data);
-        setOpenDialog(false);
-      } catch (error) {
-        console.error('Error saving data:', error);
+      if (currentRecord) {
+        setEditConfirmOpen(true);
+        return;
       }
+      await saveInformation();
+    }
+  };
+
+  const saveInformation = async () => {
+    try {
+      // Format date from yyyy-MM-dd to dd-MM-yyyy
+      const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+          return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return dateString;
+      };
+  
+      const fullName = `${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`;
+      const dataToSubmit = {
+        cic: formData.cic,
+        fullName: fullName.trim(),
+        dateOfBirth: formatDate(formData.dateOfBirth),
+        sex: formData.sex,
+        permanentAddress: formData.permanentAddress,
+        phoneNumber: formData.phoneNumber,
+        email: formData.email,
+        firstName: formData.firstName,
+        middleName: formData.middleName,
+        lastName: formData.lastName
+      };
+  
+      if (currentRecord) {
+        await informationApi.updateInformation(currentRecord.idInfo, dataToSubmit);
+        setSnackbar({
+          open: true,
+          message: 'Cập nhật thông tin thành công',
+          severity: 'success'
+        });
+      } else {
+        await informationApi.createInformation(dataToSubmit);
+        setSnackbar({
+          open: true,
+          message: 'Thêm thông tin thành công',
+          severity: 'success'
+        });
+      }
+  
+      // Refresh data
+      const data = await informationApi.getAllInformation();
+      setInformations(data);
+      setOpenDialog(false);
+      setEditConfirmOpen(false);
+    } catch (error) {
+      console.error('Error saving data:', error);
+      setSnackbar({
+        open: true,
+        message: error.message || 'Có lỗi xảy ra khi lưu thông tin',
+        severity: 'error'
+      });
     }
   };
 
@@ -554,6 +578,18 @@ const AccountManagement = () => {
         </DialogActions>
       </Dialog>
 
+      {/* Add this Edit Confirmation Dialog */}
+    <Dialog open={editConfirmOpen} onClose={() => setEditConfirmOpen(false)}>
+      <DialogTitle>Xác nhận thay đổi</DialogTitle>
+      <DialogContent>
+        Bạn có chắc muốn thay đổi thông tin này không?
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setEditConfirmOpen(false)}>Hủy</Button>
+        <Button onClick={saveInformation} color="primary">Xác nhận</Button>
+      </DialogActions>
+    </Dialog>
+
       {/* Result Notification Snackbar */}
       <Snackbar
         open={snackbar.open}
@@ -569,6 +605,7 @@ const AccountManagement = () => {
         </Alert>
       </Snackbar>
     </div>
+    
   );
 };
 
