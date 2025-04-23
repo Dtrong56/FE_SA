@@ -3,7 +3,21 @@ import Information from '../models/Information.js';
 
 export const informationApi = {
   // CREATE
-  createInformation: (data) => axiosInstance.post('/information', data),
+  createInformation: (data) => 
+    axiosInstance.post('/information', data)
+      .then(response => {
+        const { status, message, data } = response.data;
+        console.log('[DEBUG] Create Response:', { status, message, data });
+        
+        if (status !== 'SUCCESS') {
+          throw new Error(message || 'Failed to create information');
+        }
+        return { message, data };
+      })
+      .catch(error => {
+        console.error('[API ERROR] Create failed:', error);
+        throw error;
+      }),
   
   // READ
   getAllInformation: () => 
@@ -42,7 +56,21 @@ export const informationApi = {
   getInformationById: (idInfo) => axiosInstance.get(`/information/${idInfo}`),
   
   // UPDATE
-  updateInformation: (idInfo, data) => axiosInstance.put(`/information/${idInfo}`, data),
+  updateInformation: (idInfo, data) => 
+    axiosInstance.put(`/information/${idInfo}`, data)
+      .then(response => {
+        const { status, message, data } = response.data;
+        console.log('[DEBUG] Update Response:', { status, message, data });
+        
+        if (status !== 'SUCCESS') {
+          throw new Error(message || 'Failed to update information');
+        }
+        return { message, data };
+      })
+      .catch(error => {
+        console.error('[API ERROR] Update failed:', error);
+        throw error;
+      }),
   
   // DELETE
   deleteInformation: (idInfo) => 

@@ -15,10 +15,14 @@ import {
   MenuItem
 } from '@mui/material';
 import { informationApi } from '../api/informationApi';
+import { accountApi } from '../api/accountApi';
 import { Search as SearchIcon, Edit, Delete } from '@mui/icons-material';
 import { Snackbar, Alert } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Add as AddIcon } from '@mui/icons-material';
 
 const AccountManagement = () => {
+  const navigate = useNavigate(); // Add this line
   const [informations, setInformations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,6 +49,17 @@ const AccountManagement = () => {
     permanentAddress: '',
     phoneNumber: '',
     email: ''
+  });
+
+  // Add this state with the others
+  const [accountDialog, setAccountDialog] = useState({
+    open: false,
+    idInfo: null,
+    formData: {
+      accountName: '',
+      password: ''
+    },
+    errors: {}
   });
 
   const handleAddNew = () => {
@@ -78,6 +93,19 @@ const AccountManagement = () => {
     );
   });
 
+  const handleAddAccount = (row) => {
+    setAccountDialog({
+      open: true,
+      idInfo: row.idInfo,
+      formData: {
+        accountName: '',
+        password: ''
+      },
+      errors: {}
+    });
+  };
+
+  // Update columns to add the Add icon
   const columns = [
     { field: 'idInfo', headerName: 'ID', width: 70 },
     { field: 'cic', headerName: 'CIC', width: 130 },
@@ -96,20 +124,25 @@ const AccountManagement = () => {
     {
       field: 'actions',
       headerName: 'Thao tác',
-      width: 120,
+      width: 160,
       sortable: false,
       renderCell: (params) => (
         <>
-          <IconButton onClick={() => handleEdit(params.row)}>
+          <IconButton onClick={() => handleEdit(params.row)} title="Sửa">
             <Edit />
           </IconButton>
-          <IconButton onClick={() => handleDelete(params.row)}>
+          <IconButton onClick={() => handleDelete(params.row)} title="Xóa">
             <Delete />
+          </IconButton>
+          <IconButton onClick={() => handleAddAccount(params.row)} title="Thêm tài khoản">
+            <AddIcon />
           </IconButton>
         </>
       ),
     }
   ];
+  
+  
 
   const handleEdit = (row) => {
     // Split full name into parts
@@ -268,6 +301,45 @@ const AccountManagement = () => {
       } catch (error) {
         console.error('Error saving data:', error);
       }
+    }
+  };
+
+  const handleCreateAccount = async () => {
+    // Simple validation
+    const newErrors = {};
+    if (!accountDialog.formData.accountName) {
+      newErrors.accountName = 'Tên tài khoản không được để trống';
+    }
+    if (!accountDialog.formData.password) {
+      newErrors.password = 'Mật khẩu không được để trống';
+    }
+  
+    if (Object.keys(newErrors).length > 0) {
+      setAccountDialog({...accountDialog, errors: newErrors});
+      return;
+    }
+  
+    try {
+      const accountData = {
+        accountName: accountDialog.formData.accountName,
+        password: accountDialog.formData.password,
+        isLocked: false
+      };
+  
+      await accountApi.createAccount(accountDialog.idInfo, accountData);
+      
+      setSnackbar({
+        open: true,
+        message: 'Tạo tài khoản thành công',
+        severity: 'success'
+      });
+      setAccountDialog({...accountDialog, open: false});
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: error.message || 'Tạo tài khoản thất bại',
+        severity: 'error'
+      });
     }
   };
 
@@ -436,7 +508,49 @@ const AccountManagement = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirmOpen(false)}>Hủy</Button>
-          <Button onClick={handleConfirmDelete} color="error">OK</Button>
+          <Button onClick={handleConfirmDelete} color="error">Xóa</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Create Account Dialog */}
+      <Dialog open={accountDialog.open} onClose={() => setAccountDialog({...accountDialog, open: false})}>
+        <DialogTitle>Thêm tài khoản mới</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Tên tài khoản"
+            value={accountDialog.formData.accountName}
+            onChange={(e) => setAccountDialog({
+              ...accountDialog,
+              formData: {
+                ...accountDialog.formData,
+                accountName: e.target.value
+              }
+            })}
+            error={!!accountDialog.errors.accountName}
+            helperText={accountDialog.errors.accountName}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Mật khẩu"
+            type="password"
+            value={accountDialog.formData.password}
+            onChange={(e) => setAccountDialog({
+              ...accountDialog,
+              formData: {
+                ...accountDialog.formData,
+                password: e.target.value
+              }
+            })}
+            error={!!accountDialog.errors.password}
+            helperText={accountDialog.errors.password}
+            fullWidth
+            margin="normal"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAccountDialog({...accountDialog, open: false})}>Hủy</Button>
+          <Button onClick={handleCreateAccount} color="primary">Tạo</Button>
         </DialogActions>
       </Dialog>
 
@@ -455,8 +569,10 @@ const AccountManagement = () => {
         </Alert>
       </Snackbar>
     </div>
-  ); // Remove the extra closing parenthesis after this line
+  );
 };
+
+
 
 // At the very end of the file, add this export:
 export default AccountManagement;
